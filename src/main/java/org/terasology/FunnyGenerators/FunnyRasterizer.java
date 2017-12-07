@@ -23,15 +23,13 @@ import org.terasology.world.block.BlockManager;
 import org.terasology.world.chunks.CoreChunk;
 import org.terasology.world.generation.Region;
 import org.terasology.world.generation.WorldRasterizerPlugin;
-import org.terasology.world.generation.facets.SurfaceHeightFacet;
 import org.terasology.world.generator.plugin.RegisterPlugin;
-
-import java.util.Random;
 
 @RegisterPlugin
 public class FunnyRasterizer implements WorldRasterizerPlugin {
 
-    private Block trampoline, speedBlock;
+    private Block trampoline;
+    private Block speedBlock;
 
     @Override
     public void initialize() {
@@ -41,18 +39,15 @@ public class FunnyRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
-        SurfaceHeightFacet surfaceHeightFacet = chunkRegion.getFacet(SurfaceHeightFacet.class);
+        FunnyFacet facet = chunkRegion.getFacet(FunnyFacet.class);
 
         for (Vector3i position : chunkRegion.getRegion()) {
-            float surfaceHeight = surfaceHeightFacet.getWorld(position.x, position.z);
 
             Block desiredBlock = trampoline;
             if (Math.random() <= 0.5) {
                 desiredBlock = speedBlock;
             }
-            Random random = new Random();
-            int randInt = random.nextInt(100)+1;
-            if (position.y < surfaceHeight && randInt >= 100) {
+            if (facet.getWorld(position)) {
                 chunk.setBlock(ChunkMath.calcBlockPos(position), desiredBlock);
             }
         }
