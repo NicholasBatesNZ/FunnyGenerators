@@ -1,0 +1,18 @@
+{
+    "id" : "FunnyGenerators",
+    "version" : "0.1.0-SNAPSHOT",
+    "author" : "NicholasBatesNZ",
+    "displayName" : "FunnyGenerators",
+    "description" : "A module to generate FunnyBlocks in the world because they're awesome!",
+    "dependencies" : [
+        {
+            "id" : "Core",
+            "minVersion" : "1.0.0"
+        },
+        {
+            "id" : "FunnyBlocks",
+            "minVersion" : "0.2.0"
+        }
+    ],
+    "serverSideOnly" : false
+}
