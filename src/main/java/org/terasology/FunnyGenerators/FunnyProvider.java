@@ -15,9 +15,12 @@
  */
 package org.terasology.FunnyGenerators;
 
+import org.terasology.entitySystem.Component;
 import org.terasology.math.geom.BaseVector2i;
+import org.terasology.rendering.nui.properties.Checkbox;
 import org.terasology.utilities.procedural.SimplexNoise;
 import org.terasology.world.generation.Border3D;
+import org.terasology.world.generation.ConfigurableFacetProvider;
 import org.terasology.world.generation.Facet;
 import org.terasology.world.generation.FacetProviderPlugin;
 import org.terasology.world.generation.GeneratingRegion;
@@ -27,11 +30,12 @@ import org.terasology.world.generation.facets.SurfaceHeightFacet;
 import org.terasology.world.generator.plugin.RegisterPlugin;
 
 @RegisterPlugin
-@Produces(FunnyFacet.class)
+@Produces({TrampolineFacet.class, SpeedBlockFacet.class})
 @Requires(@Facet(SurfaceHeightFacet.class))
-public class FunnyProvider implements FacetProviderPlugin {
+public class FunnyProvider implements ConfigurableFacetProvider, FacetProviderPlugin {
 
     private SimplexNoise noise;
+    private FunnyConfiguration configuration = new FunnyConfiguration();
 
     @Override
     public void setSeed(long seed) {
@@ -41,20 +45,49 @@ public class FunnyProvider implements FacetProviderPlugin {
     @Override
     public void process(GeneratingRegion region) {
 
-        Border3D border = region.getBorderForFacet(FunnyFacet.class);
-        FunnyFacet facet = new FunnyFacet(region.getRegion(), border);
+        Border3D trampolineBorder = region.getBorderForFacet(TrampolineFacet.class);
+        Border3D speedBlockBorder = region.getBorderForFacet(SpeedBlockFacet.class);
+
+        TrampolineFacet trampolineFacet = new TrampolineFacet(region.getRegion(), trampolineBorder);
+        SpeedBlockFacet speedBlockFacet = new SpeedBlockFacet(region.getRegion(), speedBlockBorder);
         SurfaceHeightFacet surfaceHeightFacet = region.getRegionFacet(SurfaceHeightFacet.class);
 
         for (BaseVector2i position : surfaceHeightFacet.getWorldRegion().contents()) {
             int surfaceHeight = (int) surfaceHeightFacet.getWorld(position);
 
-            if (facet.getWorldRegion().encompasses(position.getX(), surfaceHeight, position.getY())
-                    && noise.noise(position.getX(), position.getY()) > 0.99) {
-
-                facet.setWorld(position.getX(), surfaceHeight, position.getY(), true);
+            if (noise.noise(position.getX(), position.getY()) > 0.99) {
+                if (Math.random() <= 0.5 && trampolineFacet.getWorldRegion().encompasses(position.getX(), surfaceHeight, position.getY()) && configuration.trampolines) {
+                    trampolineFacet.setWorld(position.getX(), surfaceHeight, position.getY(), true);
+                } else if (speedBlockFacet.getWorldRegion().encompasses(position.getX(), surfaceHeight, position.getY()) && configuration.speedBlocks) {
+                    speedBlockFacet.setWorld(position.getX(), surfaceHeight, position.getY(), true);
+                }
             }
         }
 
-        region.setRegionFacet(FunnyFacet.class, facet);
+        region.setRegionFacet(TrampolineFacet.class, trampolineFacet);
+        region.setRegionFacet(SpeedBlockFacet.class, speedBlockFacet);
+    }
+
+    @Override
+    public String getConfigurationName() {
+        return "Funny Blocks";
+    }
+
+    @Override
+    public Component getConfiguration() {
+        return configuration;
+    }
+
+    @Override
+    public void setConfiguration(Component configuration) {
+        this.configuration = (FunnyConfiguration) configuration;
+    }
+
+    private static class FunnyConfiguration implements Component {
+        @Checkbox(label = "Trampolines", description = "Should trampolines generate in the world?")
+        private boolean trampolines = true;
+
+        @Checkbox(label = "Speed Blocks", description = "Should speed blocks generate in the world?")
+        private boolean speedBlocks = true;
     }
 }

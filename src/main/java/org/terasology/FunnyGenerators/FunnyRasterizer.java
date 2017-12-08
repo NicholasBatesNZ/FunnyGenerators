@@ -39,16 +39,17 @@ public class FunnyRasterizer implements WorldRasterizerPlugin {
 
     @Override
     public void generateChunk(CoreChunk chunk, Region chunkRegion) {
-        FunnyFacet facet = chunkRegion.getFacet(FunnyFacet.class);
+
+        TrampolineFacet trampolineFacet = chunkRegion.getFacet(TrampolineFacet.class);
+        SpeedBlockFacet speedBlockFacet = chunkRegion.getFacet(SpeedBlockFacet.class);
 
         for (Vector3i position : chunkRegion.getRegion()) {
 
-            Block desiredBlock = trampoline;
-            if (Math.random() <= 0.5) {
-                desiredBlock = speedBlock;
+            if (trampolineFacet.getWorld(position)) {
+                chunk.setBlock(ChunkMath.calcBlockPos(position), trampoline);
             }
-            if (facet.getWorld(position)) {
-                chunk.setBlock(ChunkMath.calcBlockPos(position), desiredBlock);
+            if (speedBlockFacet.getWorld(position)) {
+                chunk.setBlock(ChunkMath.calcBlockPos(position), speedBlock);
             }
         }
     }
